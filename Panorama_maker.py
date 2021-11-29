@@ -9,7 +9,7 @@ class Panorama:
 
     def __init__(self,images,crop=False, whole_picture = False):
         self.images = images
-        # self.equalize_histograms(self.images)
+        self.fix_img_size(self.images)
         self.crop = crop
         self.whole_picture = whole_picture
 
@@ -137,7 +137,7 @@ class Panorama:
         for i in range(img_gray.shape[0]):
             linie = img_gray[i, :]
             for j in range(len(linie)):
-                if linie[j] == 0 and np.all(linie[j:]) == False: # verific daca ce urmeaza e numai 0
+                if linie[j] == 0 and np.all(linie[j:] == 0) == True: # verific daca ce urmeaza e numai 0
                     crop_col.append(j) # salvam indicele coloanei unde incepe marginea neagra
         if len(crop_col) > 0:
             x_crop = min(crop_col)
@@ -148,11 +148,11 @@ class Panorama:
         for i in range(x_crop):
             col = img_gray[:, i]
             for k in range(len(col)):
-                if col[k] == 0 and np.all(col[k:]) == False:
+                if col[k] == 0 and np.all(col[k:] == 0) == True:
                     crop_linii_jos.append(k)
 
             for k in reversed(range(len(col))):
-                if col[k] == 0 and np.all(col[:k]) == False:
+                if col[k] == 0 and np.all(col[:k] == 0) == True:
                     crop_linii_sus.append(k)
 
 
@@ -167,11 +167,21 @@ class Panorama:
 
         return img
 
+    def fix_img_size(self,images):
+        height_width = []
+        for img in images:
+            height_width.append([img.shape[0], img.shape[1]])
+        h_min = min(height_width, key=lambda x: x[0])[0]
+        w_min = min(height_width, key=lambda x: x[1])[1]
+        for i in range(len(images)):
+            images[i] = cv2.resize(images[i], (h_min, w_min))
+
 if __name__ == '__main__':
-    im1 = cv2.imread('1.png')
-    im2 = cv2.imread('2.png')
-    im3 = cv2.imread('3.png')
-    panorama = Panorama([im1,im2,im3],whole_picture=True)
+    im1 = cv2.imread('parc1.jpg')
+    im2 = cv2.imread('parc2.jpg')
+    im3 = cv2.imread('parc3.jpg')
+    images = [im1,im2,im3]
+    panorama = Panorama(images,crop=True)
     stiched_image = panorama.stich_all_images()
     plt.figure()
     plt.imshow(stiched_image[..., ::-1]); plt.title("Stiched image")
